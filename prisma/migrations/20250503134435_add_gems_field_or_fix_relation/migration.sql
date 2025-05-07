@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `account` ADD COLUMN `gems` INTEGER NOT NULL DEFAULT 0;

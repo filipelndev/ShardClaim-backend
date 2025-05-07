@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  email     String    @unique
+  password  String
+  photo     String?    @db.Text
+  role      Role      @default(USER)
+  accounts  Account[] @relation("UserAccounts")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Account {
+  id              Int         @id @default(autoincrement())
+  name            String // Nome da conta no jogo
+  inQueue         Boolean     @default(false)
+  UserAccount     User        @relation("UserAccounts", fields: [userId], references: [id], onDelete: Cascade)
+  userId          Int
+  gems            Int         @default(0)
+  cardShards      CardShard[] // Lista de shards coletados pela conta
+  shardCollecting CardShard[] @relation("ShardCollectors")
+  shardWaiting    CardShard[] @relation("ShardQueue")
+}
+
+model CardShard {
+  id         Int        @id @default(autoincrement())
+  cardName   String     @unique(map: "unique_cardName")
+  cardPhoto  String?
+  claimedAt  DateTime?
+  accountId  Int?
+  account    Account?   @relation(fields: [accountId], references: [id], map: "Account_Shards_fkey")
+  collectors Account[]  @relation("ShardCollectors")
+  waitingList Account[] @relation("ShardQueue")
+  createdAt  DateTime   @default(now())
+}
+
+enum Role {
+  ADMIN
+  USER
+}
