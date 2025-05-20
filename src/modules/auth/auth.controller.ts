@@ -19,12 +19,8 @@ export class AuthController {
       if (!user || !(await bcrypt.compare(body.password, user.password))) {
         throw new UnauthorizedException('Credenciais inválidas.');
       }
-  
-      if (user.password === await bcrypt.hash('senha123', 10)) {
-        throw new BadRequestException('Você precisa alterar sua senha antes de prosseguir.');
-      }
-    
-      const payload = { id: user.id, email: user.email, role: user.role };
+      
+      const payload = { sub: user.id, email: user.email, role: user.role };
       const accessToken = this.jwtService.sign(payload);
     
       return { access_token: accessToken };
@@ -43,6 +39,19 @@ async forgotPassword(@Body() body) {
   await this.emailService.sendPasswordResetEmail(user.email, resetToken);
 
   return { message: 'Email de recuperação enviado!' };
+}
+
+@Post('change-password')
+async changePassword(@Body() body) {
+  const { userId, newPassword } = body;
+  
+  if (!newPassword || newPassword.length < 6) {
+    throw new BadRequestException('A senha deve ter pelo menos 6 caracteres.');
+  }
+
+  await this.authService.updatePassword(userId, newPassword);
+
+  return { message: 'Senha alterada com sucesso! Agora você pode fazer login.' };
 }
 
 }

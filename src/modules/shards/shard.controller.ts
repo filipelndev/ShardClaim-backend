@@ -29,4 +29,12 @@ async applyForShard(
   }
   return this.shardService.applyForShard(+shardId, +accountId);
 }
+
+@Post('finish/:shardId')
+  async finishShard(
+    @Param('shardId') shardId: number,
+    @Body() body: { collectorIndex: number }
+  ) {
+    return this.shardService.finishShard(shardId, body.collectorIndex);
+  }
 }

@@ -12,11 +12,12 @@ model User {
   username  String    @unique
   email     String    @unique
   password  String
-  photo     String?    @db.Text
+  photo     String?   @db.Text
   role      Role      @default(USER)
   accounts  Account[] @relation("UserAccounts")
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  firstLogin Boolean  @default(true) // Define como `true` por padrão
 }
 
 model Account {

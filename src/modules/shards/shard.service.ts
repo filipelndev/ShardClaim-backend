@@ -1,8 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateShardDto } from './dto/claim-shard.dto';
-import { ClaimShardDto } from './dto/create-shard.dto';
-
 
 @Injectable()
 export class ShardService {
@@ -74,4 +72,55 @@ export class ShardService {
     });
   }
   
+  async finishShard(shardId: number, collectorIndex: number): Promise<string> {
+    const shard = await this.prisma.cardShard.findUnique({
+      where: { id: shardId },
+      include: { collectors: true, waitingList: true },
+    });
+
+    if (!shard) throw new NotFoundException('Shard não encontrado!');
+
+    if (collectorIndex < 0 || collectorIndex >= shard.collectors.length) {
+      throw new BadRequestException('Índice de coletor inválido!');
+    }
+
+    // Remove o coletor específico (primeiro ou segundo)
+    const collectorToRemove = shard.collectors[collectorIndex];
+
+    await this.prisma.cardShard.update({
+      where: { id: shardId },
+      data: {
+        collectors: {
+          disconnect: { id: collectorToRemove.id },
+        },
+      },
+    });
+
+    // Adiciona o próximo da fila, se houver
+    if (shard.waitingList.length > 0) {
+      const nextCollector = shard.waitingList[0];
+
+      await this.prisma.cardShard.update({
+        where: { id: shardId },
+        data: {
+          collectors: {
+            connect: { id: nextCollector.id },
+          },
+          waitingList: {
+            disconnect: { id: nextCollector.id },
+          },
+        },
+      });
+    }
+
+    // Se não houver mais ninguém na fila, o shard fica disponível
+    if (shard.waitingList.length === 0) {
+      await this.prisma.cardShard.update({
+        where: { id: shardId },
+        data: { claimedAt: new Date() },
+      });
+    }
+
+    return 'Shard atualizado com sucesso!';
+  }
 }

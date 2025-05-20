@@ -3,40 +3,28 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const defaultShards = [
-    { cardName: 'Paragon', cardPhoto: 'paragon.jpeg' },
-    { cardName: 'Killer Queen', cardPhoto: 'killerQueen.jpeg' },
-    { cardName: 'Ridge Hunter', cardPhoto: 'ridgeHunter.jpeg' },
-    { cardName: 'Sea Wizard', cardPhoto: 'seaWizard.jpeg' },
-    { cardName: 'Prime Angel', cardPhoto: 'angelPrime.jpeg' }
+  const shards = [
+    { cardName: 'Paragon', cardPhoto: 'paragon.jpg' },
+    { cardName: 'Archdeva', cardPhoto: 'archDeva.jpg'  },
+    { cardName: 'Faen Fistborn', cardPhoto: 'faenFistborn.jpg' },
+    { cardName: 'Abaddon', cardPhoto: 'abaddon.jpg' },
+    { cardName: 'Angel Prime', cardPhoto: 'angelPrime.jpg' },
   ];
 
-  for (const shard of defaultShards) {
-    const existingShard = await prisma.cardShard.findFirst({
-      where: { cardName: shard.cardName }
+  for (const shard of shards) {
+    await prisma.cardShard.upsert({
+      where: { cardName: shard.cardName },
+      update: {},
+      create: shard,
     });
-  
-    if (!existingShard) {
-      await prisma.cardShard.create({
-        data: {
-          cardName: shard.cardName,
-          cardPhoto: shard.cardPhoto
-        }
-      });
-      console.log(`Shard ${shard.cardName} foi adicionado ao banco.`);
-    } else {
-      console.log(`Shard ${shard.cardName} já existe no banco.`);
-    }
   }
 
-  console.log('Shards inseridos com sucesso!');
+  console.log('Shards populados com sucesso!');
 }
 
 main()
-  .catch(e => {
-    console.error(e);
+  .catch((err) => {
+    console.error(err);
     process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .finally(() => prisma.$disconnect());

@@ -1,8 +1,9 @@
-import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Req, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Patch, Post, UseInterceptors, Req, UnauthorizedException, UploadedFile } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/userDTO';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import * as fs from 'fs';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('users')
 export class UserController {
@@ -45,20 +46,26 @@ async getUserAccounts(@Param('id') userId: string) {
 }
 
 @Patch(':id/update-photo')
+@UseInterceptors(FileInterceptor('file'))
 async updateUserProfilePicture(
-  @Param('id') userId: number,
-  @Body() body: any
+  @Param('id') userId: string,
+  @UploadedFile() file: Express.Multer.File
 ) {
-  if (!body.photo) {
-    throw new BadRequestException('Campo photo não enviado na requisição.');
+  if (!file) {
+    throw new BadRequestException('Nenhum arquivo enviado!');
   }
 
-  return this.userService.updateProfilePicture(+userId, body.photo);
+  const filePath = `uploads/${userId}-${file.originalname}`;
+  await fs.promises.writeFile(filePath, file.buffer);
+
+  const photoUrl = `http://localhost:3000/${filePath}`;
+  return this.userService.updateProfilePicture(parseInt(userId, 10), photoUrl);
 }
+
 
 @Get(':id')
 async getUserById(@Param('id') userId: number) {
-  console.log('Buscando usuário com ID:', userId); // 🔥 Log para ver se o ID está sendo recebido corretamente
+  console.log('Buscando usuário com ID:', userId);
 
   return this.userService.getUserById(+userId);
 }

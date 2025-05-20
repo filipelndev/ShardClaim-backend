@@ -34,14 +34,21 @@ export class UserService {
     });
   }
 
-  async updateProfilePicture(userId: number, photo: string) { // 🔥 Usamos `photo`
+  async updateProfilePicture(userId: number, photo: string) {
+    const userExists = await this.prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!userExists) {
+      throw new Error('Usuário não encontrado!');
+    }
+
     return this.prisma.user.update({
       where: { id: userId },
-      data: { photo } // 🔥 Atualizamos com `photo`
+      data: { photo }
     });
   }
 
-  
   async getUserById(userId: number) {
     return this.prisma.user.findUnique({
       where: { id: userId },
@@ -65,7 +72,7 @@ export class UserService {
   async updatePassword(userId: number, newPassword: string) {
     return this.prisma.user.update({
       where: { id: userId },
-      data: { password: newPassword }
+      data: { password: newPassword, firstLogin: false }
     });
   }
 }

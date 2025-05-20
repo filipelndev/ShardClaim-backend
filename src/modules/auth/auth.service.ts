@@ -1,5 +1,5 @@
 // src/auth/auth.service.ts
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -18,28 +18,52 @@ export class AuthService {
     return null;
   }
 
-  async login(user: any) {
-    const payload = { 
-      email: user.email,
-      sub: user.id,
-      role: user.role,
-      firstLogin: user.password === await bcrypt.hash('senha123', 10) // Define se a senha ainda é a padrão
-      };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+  async login(email: string, password: string) {
+  const user = await this.prisma.user.findUnique({ where: { email } });
+
+  if (!user) {
+    throw new UnauthorizedException('Usuário não encontrado.');
   }
 
-  async forgotPassword(email: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      throw new BadRequestException('Email não encontrado.');
-    }
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordValid) {
+    throw new UnauthorizedException('Senha inválida.');
+  }
+
+  // Cria o payload incluindo o campo firstLogin
+  const payload = { 
+    email: user.email,
+    sub: user.id,
+    role: user.role,
+    isFirstLogin: user.firstLogin // Aqui o valor deve vir corretamente do banco
+  };
+
+  // Gera o token com o algoritmo HS256
+  const accessToken = this.jwtService.sign(payload, { algorithm: 'HS256' });  
+  // Decodifica o token para teste e loga informações importantes
+  const testDecodedToken = this.jwtService.decode(accessToken);
+  console.log('Payload enviado:', payload);
+  console.log('Token gerado:', accessToken);
+  console.log('Token decodificado (teste):', testDecodedToken);
+
+  return {
+    access_token: accessToken,
+    isFirstLogin: user.firstLogin
+  };
+}
+
+  async updatePassword(userId: number, newPassword: string) {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
   
-    const resetToken = this.jwtService.sign({ sub: user.id }, { expiresIn: '1h' });
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+        firstLogin: false // Define como `false` após trocar a senha
+      }
+    });
   
-    await this.emailService.sendPasswordResetEmail(email, resetToken);
-  
-    return { message: 'Email de recuperação enviado!' };
+    return { message: 'Senha alterada com sucesso!' };
   }
 }
