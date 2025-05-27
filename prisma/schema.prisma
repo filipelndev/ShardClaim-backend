@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://dhbrazil:DwanqNnctcusygfn9x4BLPbOpYr7qZM3@dpg-d0qscg3ipnbc73ems7n0-a.oregon-postgres.render.com/deckheroes"
+  url      = "postgresql://dhbrazil:i766u4rmY8hBLK5eNiXOby7FopKepqK0@dpg-d0qtdd9r0fns73fovi00-a.oregon-postgres.render.com/shardclaimdatabase"
 }
 
 model User {
