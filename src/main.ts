@@ -13,7 +13,7 @@ async function bootstrap() {
   app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
   app.enableCors({
-    origin: 'http://localhost:4200',
+    origin: 'https://brazildh-filipelndevs-projects.vercel.app/',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Authorization'
   });
