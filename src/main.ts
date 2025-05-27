@@ -12,17 +12,11 @@ async function bootstrap() {
   app.use(express.json({ limit: '5mb' })); // 🔥 Permite arquivos de até 5MB
   app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
-  app.enableCors({
-    origin: 'https://brazildh-filipelndevs-projects.vercel.app/',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Authorization'
-  });
-
-  app.enableCors({
-    origin: '*',
-    methods: ['GET'],
-    allowedHeaders: ['Content-Type']
-  });
+app.enableCors({
+  origin: ['https://brazildh-filipelndevs-projects.vercel.app'],
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+});
 
   // Criar usuário admin, se ainda não existir
   const admin = await prisma.user.findUnique({ where: { email: 'admin@gbr.com' } });

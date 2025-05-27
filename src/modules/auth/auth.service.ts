@@ -31,21 +31,18 @@ export class AuthService {
     throw new UnauthorizedException('Senha inválida.');
   }
 
-  // Cria o payload incluindo o campo firstLogin
+  // Cria o payload
   const payload = { 
     email: user.email,
     sub: user.id,
     role: user.role,
-    isFirstLogin: user.firstLogin // Aqui o valor deve vir corretamente do banco
+    isFirstLogin: user.firstLogin
   };
 
   // Gera o token com o algoritmo HS256
   const accessToken = this.jwtService.sign(payload, { algorithm: 'HS256' });  
   // Decodifica o token para teste e loga informações importantes
   const testDecodedToken = this.jwtService.decode(accessToken);
-  console.log('Payload enviado:', payload);
-  console.log('Token gerado:', accessToken);
-  console.log('Token decodificado (teste):', testDecodedToken);
 
   return {
     access_token: accessToken,
