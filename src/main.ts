@@ -13,9 +13,10 @@ async function bootstrap() {
   app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
 app.enableCors({
-  origin: ['*'],
+  origin: ['https://brazildh-filipelndevs-projects.vercel.app'],
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // Permite cookies e tokens de autenticação
 });
 
   // Criar usuário admin, se ainda não existir
